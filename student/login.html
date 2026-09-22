@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h1>User Dashboard</h1>
+    <p id="welcome-message">Checking login status...</p>
+    <button id="logout-btn" style="display: none;">Log Out</button>
+
+    <script type="module">
+        import { initializeApp } from "https://gstatic.com";
+        import { getAuth, onAuthStateChanged, signOut } from "https://gstatic.com";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBOgN2a2K5lc5HH269-UYNLtzyR8r9lQOM",
+          authDomain: "ai-lab-student-shirley.firebaseapp.com",
+          projectId: "ai-lab-student-shirley",
+          storageBucket: "ai-lab-student-shirley.firebasestorage.app",
+          messagingSenderId: "960015098852",
+          appId: "1:960015098852:web:22079c130d73fd58ee1df1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Listen for user state (logged in vs logged out)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in.
+                document.getElementById('welcome-message').innerText = `Welcome, ${user.displayName}! (${user.email})`;
+                document.getElementById('logout-btn').style.display = "block";
+            } else {
+                // No user is signed in. Kick them back to the login page.
+                window.location.href = "index.html";
+            }
+        });
+
+        // Handle Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            });
+        });
+    </script>
+</body>
+</html>
