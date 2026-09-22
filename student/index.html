@@ -12,8 +12,9 @@
 
     <!-- Load Firebase SDK Modules using ES Modules -->
     <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://gstatic.com";
+// Switch to the stable jsDelivr CDN mirror for version 10.8.0
+import { initializeApp } from "https://jsdelivr.net";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://jsdelivr.net";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
