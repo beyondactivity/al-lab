@@ -2,11 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Subpage A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to My App</title>
 </head>
 <body>
-    <h1>This is Subpage A!</h1>
-    <p>URL: your-username.github.io/your-repo/a/</p>
-    <a href="../index.html">Go back home</a>
+    <h1>Welcome to My App</h1>
+    <p>Please log in to continue.</p>
+    <button id="login-btn">Log In with Google</button>
+
+    <!-- Load Firebase SDK Modules using ES Modules -->
+    <script type="module">
+        import { initializeApp } from "https://gstatic.com";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://gstatic.com";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBOgN2a2K5lc5HH269-UYNLtzyR8r9lQOM",
+          authDomain: "ai-lab-student-shirley.firebaseapp.com",
+          projectId: "ai-lab-student-shirley",
+          storageBucket: "ai-lab-student-shirley.firebasestorage.app",
+          messagingSenderId: "960015098852",
+          appId: "1:960015098852:web:22079c130d73fd58ee1df1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Handle Login Click
+        document.getElementById('login-btn').addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("Success! Logged in user:", result.user);
+                    // Redirect to the dashboard after a successful login
+                    window.location.href = "dashboard.html";
+                })
+                .catch((error) => {
+                    console.error("Login failed:", error.message);
+                    alert("Login failed: " + error.message);
+                });
+        });
+    </script>
 </body>
 </html>
