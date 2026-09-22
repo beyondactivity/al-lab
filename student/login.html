@@ -11,8 +11,9 @@
     <button id="logout-btn" style="display: none;">Log Out</button>
 
     <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getAuth, onAuthStateChanged, signOut } from "https://gstatic.com";
+// Switch to the stable jsDelivr CDN mirror for version 10.8.0
+import { initializeApp } from "https://jsdelivr.net";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://jsdelivr.net";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
