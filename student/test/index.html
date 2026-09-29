@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Pages Comments - Email Auth</title>
+    <title>GitHub Pages Comments - Email & Google Auth</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
         .hidden { display: none; }
-        .auth-form { background: #f4f4f4; padding: 15px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ddd; }
+        .auth-container { background: #f4f4f4; padding: 20px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ddd; }
         .auth-form input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
-        .auth-form button { margin-right: 10px; }
+        .auth-form button { margin-right: 10px; padding: 8px 12px; }
+        .divider { text-align: center; margin: 15px 0; border-bottom: 1px solid #ccc; line-height: 0.1em; }
+        .divider span { background:#f4f4f4; padding:0 10px; color: #666; font-size: 14px; }
+        .google-btn { display: block; width: 100%; padding: 10px; background-color: #4285F4; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .google-btn:hover { background-color: #357ae8; }
         .toggle-auth { color: #0066cc; cursor: pointer; text-decoration: underline; font-size: 14px; display: inline-block; margin-top: 10px; }
         #comments-list { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
         .comment { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
@@ -20,8 +24,9 @@
     <!-- Error Display -->
     <div id="error-message"></div>
 
-    <!-- Authentication Forms -->
-    <div id="auth-section">
+    <!-- Authentication Container -->
+    <div id="auth-section" class="auth-container">
+        
         <!-- Sign In Form -->
         <div id="login-box" class="auth-form">
             <h3>Sign In</h3>
@@ -39,11 +44,17 @@
             <button id="register-btn">Register</button>
             <span id="go-to-login" class="toggle-auth">Already have an account? Login</span>
         </div>
+
+        <!-- Visual Separator -->
+        <div class="divider"><span>OR</span></div>
+
+        <!-- Google Alternative -->
+        <button id="google-login-btn" class="google-btn">Sign in with Google</button>
     </div>
 
     <!-- User Profile Section -->
     <div id="user-section" class="hidden">
-        <p>Logged in as: <strong id="user-email-display"></strong></p>
+        <p>Logged in as: <strong id="user-display"></strong></p>
         <button id="logout-btn">Sign Out</button>
     </div>
 
@@ -84,6 +95,7 @@
         const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
 
         // DOM Elements
         const errMsg = document.getElementById("error-message");
@@ -91,7 +103,7 @@
         const loginBox = document.getElementById("login-box");
         const registerBox = document.getElementById("register-box");
         const userSection = document.getElementById("user-section");
-        const userEmailDisplay = document.getElementById("user-email-display");
+        const userDisplay = document.getElementById("user-display");
         const commentSection = document.getElementById("comment-section");
         const commentInput = document.getElementById("comment-input");
         const submitComment = document.getElementById("submit-comment");
@@ -101,7 +113,7 @@
         document.getElementById("go-to-register").onclick = () => { loginBox.classList.add("hidden"); registerBox.classList.remove("hidden"); errMsg.textContent = ""; };
         document.getElementById("go-to-login").onclick = () => { registerBox.classList.add("hidden"); loginBox.classList.remove("hidden"); errMsg.textContent = ""; };
 
-        // Handle Registration
+        // Handle Registration (Email)
         document.getElementById("register-btn").onclick = async () => {
             const email = document.getElementById("register-email").value.trim();
             const password = document.getElementById("register-password").value;
@@ -113,13 +125,23 @@
             }
         };
 
-        // Handle Login
+        // Handle Login (Email)
         document.getElementById("login-btn").onclick = async () => {
             const email = document.getElementById("login-email").value.trim();
             const password = document.getElementById("login-password").value;
             errMsg.textContent = "";
             try {
                 await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                errMsg.textContent = error.message;
+            }
+        };
+
+        // Handle Google Sign-In
+        document.getElementById("google-login-btn").onclick = async () => {
+            errMsg.textContent = "";
+            try {
+                await signInWithPopup(auth, googleProvider);
             } catch (error) {
                 errMsg.textContent = error.message;
             }
@@ -134,12 +156,14 @@
                 authSection.classList.add("hidden");
                 userSection.classList.remove("hidden");
                 commentSection.classList.remove("hidden");
-                userEmailDisplay.textContent = user.email;
+                
+                // Show Google Display Name if available, otherwise fallback to Email
+                userDisplay.textContent = user.displayName || user.email;
             } else {
                 authSection.classList.remove("hidden");
                 userSection.classList.add("hidden");
                 commentSection.classList.add("hidden");
-                userEmailDisplay.textContent = "";
+                userDisplay.textContent = "";
             }
         });
 
@@ -149,9 +173,12 @@
             if (!text) return;
             const user = auth.currentUser;
             
+            // Choose display name string based on login method
+            const commenterName = user.displayName || user.email.split('@')[0];
+            
             try {
                 await addDoc(collection(db, "comments"), {
-                    name: user.email.split('@')[0], // Uses the first part of their email as a fallback name
+                    name: commenterName,
                     text: text,
                     createdAt: serverTimestamp()
                 });
@@ -176,4 +203,5 @@
     </script>
 </body>
 </html>
+
 
