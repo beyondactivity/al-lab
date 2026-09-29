@@ -2,47 +2,108 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to My App</title>
+    <title>GitHub Pages Comments</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        .hidden { display: none; }
+        #comments-list { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
+        .comment { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My App</h1>
-    <p>Please log in to continue.</p>
-    <button id="login-btn">Log In with Google</button>
 
-    <!-- Load Firebase SDK Modules using ES Modules -->
+    <div id="auth-section">
+        <button id="login-btn">Sign in with Google</button>
+    </div>
+
+    <div id="user-section" class="hidden">
+        <p>Welcome, <span id="user-name"></span>!</p>
+        <button id="logout-btn">Sign Out</button>
+    </div>
+
+    <div id="comment-section" class="hidden">
+        <h3>Leave a Comment</h3>
+        <textarea id="comment-input" rows="3" placeholder="Write your comment..."></textarea><br>
+        <button id="submit-comment">Post Comment</button>
+    </div>
+
+    <h3>Comments</h3>
+    <div id="comments-list">Loading comments...</div>
+
+    <!-- Firebase SDK Scripts -->
     <script type="module">
-// Switch to the stable jsDelivr CDN mirror for version 10.8.0
-import { initializeApp } from "https://jsdelivr.net";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://jsdelivr.net";
+        import { initializeApp } from "https://gstatic.com";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://gstatic.com";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://gstatic.com";
 
-        // Your web app's Firebase configuration
+        // Replace with your actual Firebase config
         const firebaseConfig = {
-          apiKey: "AIzaSyBOgN2a2K5lc5HH269-UYNLtzyR8r9lQOM",
-          authDomain: "ai-lab-student-shirley.firebaseapp.com",
-          projectId: "ai-lab-student-shirley",
-          storageBucket: "ai-lab-student-shirley.firebasestorage.app",
-          messagingSenderId: "960015098852",
-          appId: "1:960015098852:web:22079c130d73fd58ee1df1"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // Handle Login Click
-        document.getElementById('login-btn').addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    console.log("Success! Logged in user:", result.user);
-                    // Redirect to the dashboard after a successful login
-                    window.location.href = "dashboard.html";
-                })
-                .catch((error) => {
-                    console.error("Login failed:", error.message);
-                    alert("Login failed: " + error.message);
-                });
+        const loginBtn = document.getElementById("login-btn");
+        const logoutBtn = document.getElementById("logout-btn");
+        const authSection = document.getElementById("auth-section");
+        const userSection = document.getElementById("user-section");
+        const userName = document.getElementById("user-name");
+        const commentSection = document.getElementById("comment-section");
+        const commentInput = document.getElementById("comment-input");
+        const submitComment = document.getElementById("submit-comment");
+        const commentsList = document.getElementById("comments-list");
+
+        // Handle Login
+        loginBtn.onclick = () => signInWithPopup(auth, provider);
+        logoutBtn.onclick = () => signOut(auth);
+
+        // Track Auth State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authSection.classList.add("hidden");
+                userSection.classList.remove("hidden");
+                commentSection.classList.remove("hidden");
+                userName.textContent = user.displayName;
+            } else {
+                authSection.classList.remove("hidden");
+                userSection.classList.add("hidden");
+                commentSection.classList.add("hidden");
+            }
+        });
+
+        // Post Comment
+        submitComment.onclick = async () => {
+            const text = commentInput.value.trim();
+            if (!text) return;
+            const user = auth.currentUser;
+            
+            await addDoc(collection(db, "comments"), {
+                name: user.displayName,
+                text: text,
+                createdAt: serverTimestamp()
+            });
+            commentInput.value = "";
+        };
+
+        // Load Comments in Real-time
+        const q = query(collection(db, "comments"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            commentsList.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const div = document.createElement("div");
+                div.className = "comment";
+                div.innerHTML = `<strong>${data.name || 'Anonymous'}</strong>: <p>${data.text}</p>`;
+                commentsList.appendChild(div);
+            });
         });
     </script>
 </body>
